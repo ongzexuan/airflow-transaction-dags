@@ -5,30 +5,48 @@ import psycopg2
 import psycopg2.extras
 import traceback
 
-from datetime import datetime, date, timedelta
+from datetime import datetime
 from dotenv import load_dotenv
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.http_operator import SimpleHttpOperator
-from airflow.operators.postgres_operator import PostgresOperator
+from airflow.models import Variable
 
 load_dotenv()
 
-TODAY = datetime.today().strftime('%Y-%m-%d')
-#TODAY = "2020-06-20" # DEBUG
-#YESTERDAY = (date.today() - timedelta(days=10)).strftime('%Y-%m-%d')
+# Switch variable source depending on deployment environment
+ENVIRONMENT = os.getenv("ENVIRONMENT")
+if ENVIRONMENT:
 
-TABLE = os.getenv("TABLE")
-CLIENT_ID = os.getenv("CLIENT_ID")
-SECRET = os.getenv("DEVELOPMENT_SECRET")
-URL = os.getenv("API_HOST") + os.getenv("ENDPOINT")
+    TABLE = os.getenv("TABLE") 
+    CLIENT_ID = os.getenv("CLIENT_ID")
+    SECRET = os.getenv("DEVELOPMENT_SECRET")
+    URL = os.getenv("API_HOST") + os.getenv("ENDPOINT")
+    PG_HOST = os.getenv("PG_HOST")
+    PG_DATABASE = os.getenv("PG_DATABASE")
+    PG_PORT = os.getenv("PG_PORT")
+    PG_USER = os.getenv("PG_USER")
+    PG_PASSWORD = os.getenv("PG_PASSWORD")
+    DISCOVER_ACCESS_TOKEN = os.getenv("DISCOVER_ACCESS_TOKEN")
+    AMEX_ACCESS_TOKEN = os.getenv("AMEX_ACCESS_TOKEN")
+    CITI_ACCESS_TOKEN = os.getenv("CITI_ACCESS_TOKEN")
+    CHASE_ACCESS_TOKEN = os.getenv("CHASE_ACCESS_TOKEN")
 
-# Database params
-PG_HOST = os.getenv("PG_HOST")
-PG_DATABASE = os.getenv("PG_DATABASE")
-PG_PORT = os.getenv("PG_PORT")
-PG_USER = os.getenv("PG_USER")
-PG_PASSWORD = os.getenv("PG_PASSWORD")
+else:
+
+    TABLE = Variable.get("TABLE") 
+    CLIENT_ID = Variable.get("CLIENT_ID")
+    SECRET = Variable.get("DEVELOPMENT_SECRET")
+    URL = Variable.get("API_HOST") + Variable.get("ENDPOINT")
+    PG_HOST = Variable.get("PG_HOST")
+    PG_DATABASE = Variable.get("PG_DATABASE")
+    PG_PORT = Variable.get("PG_PORT")
+    PG_USER = Variable.get("PG_USER")
+    PG_PASSWORD = Variable.get("PG_PASSWORD")
+    DISCOVER_ACCESS_TOKEN = Variable.get("DISCOVER_ACCESS_TOKEN")
+    AMEX_ACCESS_TOKEN = Variable.get("AMEX_ACCESS_TOKEN")
+    CITI_ACCESS_TOKEN = Variable.get("CITI_ACCESS_TOKEN")
+    CHASE_ACCESS_TOKEN = Variable.get("CHASE_ACCESS_TOKEN")
+
 
 dag_params = {
     "dag_id": "transaction_dag",
@@ -134,60 +152,52 @@ def insert_transactions(rows):
 
 def process_discover_transactions(**context):
 
-    discover_access_token = os.getenv("DISCOVER_ACCESS_TOKEN", None)
-
     # Fail early if the env variable is not present
-    assert discover_access_token is not None
+    assert DISCOVER_ACCESS_TOKEN is not None
 
     start_date = context["execution_date"].strftime('%Y-%m-%d')
     end_date = context["execution_date"].strftime('%Y-%m-%d')
 
-    data = get_transactions(CLIENT_ID, SECRET, discover_access_token, start_date, end_date)
+    data = get_transactions(CLIENT_ID, SECRET, DISCOVER_ACCESS_TOKEN, start_date, end_date)
     rows = process_transactions(data)
     insert_transactions(rows)
 
 
 def process_amex_transactions(**context):
 
-    amex_access_token = os.getenv("AMEX_ACCESS_TOKEN", None)
-
     # Fail early if the env variable is not present
-    assert amex_access_token is not None
+    assert AMEX_ACCESS_TOKEN is not None
 
     start_date = context["execution_date"].strftime('%Y-%m-%d')
     end_date = context["execution_date"].strftime('%Y-%m-%d')
 
-    data = get_transactions(CLIENT_ID, SECRET, amex_access_token, start_date, end_date)
+    data = get_transactions(CLIENT_ID, SECRET, AMEX_ACCESS_TOKEN, start_date, end_date)
     rows = process_transactions(data)
     insert_transactions(rows)
 
 
 def process_citi_transactions(**context):
 
-    citi_access_token = os.getenv("CITI_ACCESS_TOKEN", None)
-
     # Fail early if the env variable is not present
-    assert citi_access_token is not None
+    assert CITI_ACCESS_TOKEN is not None
 
     start_date = context["execution_date"].strftime('%Y-%m-%d')
     end_date = context["execution_date"].strftime('%Y-%m-%d')
 
-    data = get_transactions(CLIENT_ID, SECRET, citi_access_token, start_date, end_date)
+    data = get_transactions(CLIENT_ID, SECRET, CITI_ACCESS_TOKEN, start_date, end_date)
     rows = process_transactions(data)
     insert_transactions(rows)
 
 
 def process_chase_transactions(**context):
 
-    chase_access_token = os.getenv("CHASE_ACCESS_TOKEN", None)
-
     # Fail early if the env variable is not present
-    assert chase_access_token is not None
+    assert CHASE_ACCESS_TOKEN is not None
 
     start_date = context["execution_date"].strftime('%Y-%m-%d')
     end_date = context["execution_date"].strftime('%Y-%m-%d')
 
-    data = get_transactions(CLIENT_ID, SECRET, chase_access_token, start_date, end_date)
+    data = get_transactions(CLIENT_ID, SECRET, CHASE_ACCESS_TOKEN, start_date, end_date)
     rows = process_transactions(data)
     insert_transactions(rows)
 
