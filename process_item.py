@@ -50,7 +50,7 @@ else:
 
 dag_params = {
     "dag_id": "transaction_dag",
-    "start_date": datetime(2020, 6, 1),
+    "start_date": datetime(2020, 1, 1),
     "schedule_interval": "59 23 * * *"
 }
 
