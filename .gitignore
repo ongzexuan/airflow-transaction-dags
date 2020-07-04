@@ -116,3 +116,5 @@ dmypy.json
 
 # Mac
 .DS_Store
+
+.env-airflow
