@@ -98,6 +98,7 @@ def process_single_transaction(transaction):
 def process_transactions(plaid_transaction):
     """
     Takes the raw JSON output from the Plaid Transaction API and outputs a list of tuple of the fields being exported to the Postgres database.
+    Skips transcations that are marked as pending, we can process it another day.
 
     :param plaid_transaction: JSON object of the raw JSON output from the Transaction API
     """
@@ -106,7 +107,8 @@ def process_transactions(plaid_transaction):
 
     collected_transactions = []    
     for transaction in plaid_transaction["transactions"]:
-        collected_transactions.append(process_single_transaction(transaction))
+        if not transaction["pending"]:
+            collected_transactions.append(process_single_transaction(transaction))
 
     return collected_transactions
 

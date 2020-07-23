@@ -1,10 +1,11 @@
 # Database Fields
 
-Here we document the database fields, what they refer to, and the data type of each field.
+Here we document the database fields, what they refer to, and the data type of each field. Note we do not add pending transactions to the database.
 
 | field | data type | about |
 | --- | --- | --- |
 | `transaction_id` | `text` | Unique transaction ID from Plaid. |
+| `pending_transaction_id` | `text` | Unique pending transaction ID from Plaid, if it exists. |
 | `account_id` | `text` | Account associated with the transaction. Separate file maps `account_id`s to names. |
 | `name` | `text` | Item transacted, name of transaction. |
 | `amount` | `real` | Currency amount. Positive amount indicates debit, negative amount indicates credit. |

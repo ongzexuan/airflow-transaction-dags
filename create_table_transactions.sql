@@ -1,5 +1,6 @@
 CREATE TABLE transactions(
 	transaction_id text PRIMARY KEY,
+	pending_transaction_id text,
 	account_id text NOT NULL, 
 	name text NOT NULL,
 	amount real NOT NULL,
