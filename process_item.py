@@ -80,7 +80,7 @@ def process_single_transaction(transaction):
     merchant = transaction["merchant_name"]
 
     return (transaction_id,
-            pending_transaction_id
+            pending_transaction_id,
             account_id,
             name,
             amount,
