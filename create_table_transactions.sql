@@ -13,5 +13,5 @@ CREATE TABLE transactions(
 	transaction_type text,
 	pending boolean,
 	payment_reference text,
-	merchant text
+	merchant text	
 )
