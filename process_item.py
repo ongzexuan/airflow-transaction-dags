@@ -17,7 +17,7 @@ load_dotenv()
 ENVIRONMENT = os.getenv("ENVIRONMENT")
 if ENVIRONMENT:
 
-    TABLE = os.getenv("TABLE") 
+    TABLE = os.getenv("TABLE")
     CLIENT_ID = os.getenv("CLIENT_ID")
     SECRET = os.getenv("DEVELOPMENT_SECRET")
     URL = os.getenv("API_HOST") + os.getenv("ENDPOINT")
@@ -64,6 +64,7 @@ def process_single_transaction(transaction):
     """
 
     transaction_id = transaction["transaction_id"]
+    pending_transaction_id = transaction["pending_transaction_id"]
     account_id = transaction["account_id"]
     name = transaction["name"]
     amount = transaction["amount"]
@@ -79,6 +80,7 @@ def process_single_transaction(transaction):
     merchant = transaction["merchant_name"]
 
     return (transaction_id,
+            pending_transaction_id
             account_id,
             name,
             amount,
@@ -105,7 +107,7 @@ def process_transactions(plaid_transaction):
 
     # TODO: do something about Accounts and Items
 
-    collected_transactions = []    
+    collected_transactions = []
     for transaction in plaid_transaction["transactions"]:
         if not transaction["pending"]:
             collected_transactions.append(process_single_transaction(transaction))
@@ -141,7 +143,7 @@ def insert_transactions(rows):
 
     try:
         insert_query = "INSERT INTO {} VALUES %s ON CONFLICT DO NOTHING".format(TABLE)
-        template = "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        template = "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         psycopg2.extras.execute_values(conn.cursor(), insert_query, rows, template=template)
         conn.commit()
 
