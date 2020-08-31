@@ -261,7 +261,7 @@ def insert_spreadsheet_rows(worksheet, date, rows):
             str(datarow[5]),
             ",".join(datarow[6]),
             datarow[8],
-            ", ".join([v for v in datarow[9].values() if v]),
+            ", ".join([str(v) for v in datarow[9].values() if v]),
             datarow[10],
             datarow[11],
             datarow[12],
