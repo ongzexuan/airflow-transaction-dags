@@ -23,7 +23,7 @@ def task_success_slack_alert(context):
         None: Calls the SlackWebhookOperator execute method internally
 
     """
-    slack_webhook_token = BaseHook.get_connection(SLACK_CONN_ID).password
+    slack_webhook_token = BaseHook.get_connection(SLACK_CONN_ID).host
     slack_msg = """
             :large_blue_circle: Task Succeeded! 
             *Task*: {task}  
@@ -60,7 +60,7 @@ def task_fail_slack_alert(context):
         None: Calls the SlackWebhookOperator execute method internally
 
     """
-    slack_webhook_token = BaseHook.get_connection(SLACK_CONN_ID).password
+    slack_webhook_token = BaseHook.get_connection(SLACK_CONN_ID).host
     slack_msg = """
             :red_circle: Task Failed. 
             *Task*: {task}  
