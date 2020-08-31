@@ -237,8 +237,8 @@ with DAG(**dag_params) as dag:
 
     # Task: Dummy Group
     dummy_task = DummyOperator(task_id="all_success_task",
-                               on_success_callback="task_success_slack_alert",
-                               on_failure_callback="task_failure_slack_alert")
+                               on_success_callback=task_success_slack_alert,
+                               on_failure_callback=task_failure_slack_alert)
 
     discover_task >> dummy_task
     amex_task >> dummy_task
