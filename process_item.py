@@ -9,7 +9,10 @@ from datetime import datetime
 from dotenv import load_dotenv
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import Variable
+
+from slack_operator import task_success_slack_alert, task_fail_slack_alert
 
 load_dotenv()
 
@@ -231,3 +234,14 @@ with DAG(**dag_params) as dag:
                                 python_callable=process_chase_transactions,
                                 provide_context=True
                                 )
+
+    # Task: Dummy Group
+    dummy_task = DummyOperator(task_id="all_success_task",
+                               on_success_callback="task_success_slack_alert",
+                               on_failure_callback="task_failure_slack_alert")
+
+    discover_task >> dummy_task
+    amex_task >> dummy_task
+    citi_task >> dummy_task
+    chase_task >> dummy_task
+
