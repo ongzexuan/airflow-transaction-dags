@@ -323,6 +323,7 @@ with DAG(**dag_params) as dag:
     # Task: Dummy Group
     export_gsheet_task = PythonOperator(task_id="export_to_gsheet_task",
                                         python_callable=export_to_gsheet,
+                                        provide_context=True,
                                         on_success_callback=task_success_slack_alert,
                                         on_failure_callback=task_fail_slack_alert)
 
