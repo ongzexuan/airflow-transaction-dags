@@ -120,3 +120,4 @@ dmypy.json
 .env-airflow
 token.json
 .config
+oauth/

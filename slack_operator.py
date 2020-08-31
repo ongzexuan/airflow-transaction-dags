@@ -35,7 +35,7 @@ def task_success_slack_alert(context):
         dag=context.get("task_instance").dag_id,
         ti=context.get("task_instance"),
         exec_date=context.get("execution_date"),
-        log_url=context.get("task_instance").log_url,
+        log_url=context.get("task_instance").log_url.replace("localhost", "10.10.1.162"),
     )
 
     success_alert = SlackWebhookOperator(
@@ -72,7 +72,7 @@ def task_fail_slack_alert(context):
         dag=context.get("task_instance").dag_id,
         ti=context.get("task_instance"),
         exec_date=context.get("execution_date"),
-        log_url=context.get("task_instance").log_url,
+        log_url=context.get("task_instance").log_url.replace("localhost", "10.10.1.162"),
     )
 
     failed_alert = SlackWebhookOperator(
