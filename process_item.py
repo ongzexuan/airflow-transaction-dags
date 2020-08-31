@@ -4,6 +4,7 @@ import requests
 import psycopg2
 import psycopg2.extras
 import traceback
+import gspread
 
 from datetime import datetime
 from dotenv import load_dotenv
@@ -33,6 +34,7 @@ if ENVIRONMENT:
     AMEX_ACCESS_TOKEN = os.getenv("AMEX_ACCESS_TOKEN")
     CITI_ACCESS_TOKEN = os.getenv("CITI_ACCESS_TOKEN")
     CHASE_ACCESS_TOKEN = os.getenv("CHASE_ACCESS_TOKEN")
+    CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
 
 else:
 
@@ -49,6 +51,7 @@ else:
     AMEX_ACCESS_TOKEN = Variable.get("AMEX_ACCESS_TOKEN")
     CITI_ACCESS_TOKEN = Variable.get("CITI_ACCESS_TOKEN")
     CHASE_ACCESS_TOKEN = Variable.get("CHASE_ACCESS_TOKEN")
+    CREDENTIALS_FILE = Variable.get("CREDENTIALS_FILE")
 
 
 dag_params = {
@@ -157,6 +160,30 @@ def insert_transactions(rows):
         conn.close()
 
 
+def get_transactions(date):
+
+    conn = psycopg2.connect(dbname=PG_DATABASE,
+                            user=PG_USER,
+                            password=PG_PASSWORD,
+                            host=PG_HOST,
+                            port=PG_PORT
+                            )
+    results = []
+
+    try:
+        select_query = "SELECT * FROM {} WHERE DATE = '{}'".format(TABLE, date)
+        curr = conn.cursor()
+        curr.execute(select_query)
+        results = curr.fetchall()
+
+    except Exception as ex:
+        traceback.print_exc()
+
+    finally:
+        conn.close()
+        return results
+
+
 def process_discover_transactions(**context):
 
     # Fail early if the env variable is not present
@@ -209,6 +236,64 @@ def process_chase_transactions(**context):
     insert_transactions(rows)
 
 
+def delete_spreadsheet_rows(worksheet, date):
+
+    rows = worksheet.get_all_records()
+    delete_ids = []
+    for i, row in enumerate(rows):
+        if row['Date'] == date:
+            delete_ids.append(i+1)
+
+    for i in reversed(delete_ids):
+        worksheet.delete_rows(i+1)
+
+
+def insert_spreadsheet_rows(worksheet, date, rows):
+
+    def transform_row(datarow):
+        return(
+            datarow[7].strftime('%Y-%m-%d'),
+            datarow[0],
+            datarow[1],
+            datarow[2],
+            datarow[3],
+            datarow[4],
+            str(datarow[5]),
+            ",".join(datarow[6]),
+            datarow[8],
+            ", ".join([v for v in datarow[9].values() if v]),
+            datarow[10],
+            datarow[11],
+            datarow[12],
+            datarow[13] if datarow[13] else "",
+            datarow[14]
+        )
+
+    for row in rows:
+        worksheet.append_row(transform_row(row))
+
+
+def export_to_gsheet(**context):
+
+    # Get today's date
+    today = context["execution_date"].strftime('%Y-%m-%d')
+
+    # Get rows to insert from DB
+    rows = get_transactions(today)
+
+    # Establish connection to spreadsheet
+    gc = gspread.service_account(filename=CREDENTIALS_FILE)
+    spreadsheet = gc.open("Tax Year {}".format(context["execution_date"].strftime('%Y')))
+    worksheet = spreadsheet.worksheet("Transactions")
+
+    # To maintain idempotency, delete rows from today
+    delete_spreadsheet_rows(worksheet, today)
+
+    # Insert rows from today into spreadsheet
+    insert_spreadsheet_rows(worksheet, today, rows)
+
+
+
 with DAG(**dag_params) as dag:
 
     # Task: Discover
@@ -236,12 +321,13 @@ with DAG(**dag_params) as dag:
                                 )
 
     # Task: Dummy Group
-    dummy_task = DummyOperator(task_id="all_success_task",
-                               on_success_callback=task_success_slack_alert,
-                               on_failure_callback=task_fail_slack_alert)
+    export_gsheet_task = PythonOperator(task_id="export_to_gsheet_task",
+                                        python_callable=export_to_gsheet,
+                                        on_success_callback=task_success_slack_alert,
+                                        on_failure_callback=task_fail_slack_alert)
 
-    discover_task >> dummy_task
-    amex_task >> dummy_task
-    citi_task >> dummy_task
-    chase_task >> dummy_task
+    discover_task >> export_gsheet_task
+    amex_task >> export_gsheet_task
+    citi_task >> export_gsheet_task
+    chase_task >> export_gsheet_task
 
