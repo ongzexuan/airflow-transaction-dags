@@ -160,7 +160,7 @@ def insert_transactions(rows):
         conn.close()
 
 
-def get_transactions(date):
+def get_db_transactions(date):
 
     conn = psycopg2.connect(dbname=PG_DATABASE,
                             user=PG_USER,
@@ -279,7 +279,7 @@ def export_to_gsheet(**context):
     today = context["execution_date"].strftime('%Y-%m-%d')
 
     # Get rows to insert from DB
-    rows = get_transactions(today)
+    rows = get_db_transactions(today)
 
     # Establish connection to spreadsheet
     gc = gspread.service_account(filename=CREDENTIALS_FILE)
