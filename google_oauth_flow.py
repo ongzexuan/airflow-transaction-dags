@@ -17,7 +17,7 @@ client_id = os.getenv("GOOGLE_CLIENT_ID")
 client_secret = os.getenv("GOOGLE_SECRET")
 
 scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/spreadsheets/values"]
-redirect_uri = "https://parcview.duckdns.org/"
+redirect_uri = "<YOUR_REDIRECT_URL>"
 authorization_base_url = "https://accounts.google.com/o/oauth2/v2/auth"
 token_url = "https://www.googleapis.com/oauth2/v4/token"
 google = OAuth2Session(client_id, scope=scope, redirect_uri=redirect_uri)
